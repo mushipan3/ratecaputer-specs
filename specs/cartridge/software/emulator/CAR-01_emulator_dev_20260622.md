@@ -1064,13 +1064,26 @@ cd /path/to/ratecaputer_ctrg/emulator/car01_plugin
 cmake -B build -DSPIKE_PREFIX=$HOME/riscv-spike
 cmake --build build
 
-# 起動コマンド（common_prog.elfの場合）
+# 以降はプロジェクトルート（ratecaputer_ctrg/）から実行すること。
+# car01_pluginがtft_frame.bin・input_state.bin等をカレントディレクトリに生成するため。
+cd /path/to/ratecaputer_ctrg
+
+# 起動コマンド（共通プログラム起動の場合）
 export PATH=$HOME/riscv-spike/bin:$PATH
 spike --isa=rv32ec \
   -m0x0:0x4000,0x20000000:0x800 \
-  --extlib=./build/libcar01_plugin.so \
+  --extlib=emulator/car01_plugin/build/libcar01_plugin.so \
   --extension=car01_plugin \
-  path/to/firmware.elf
+  src/UIAPduino/common_prog/common_prog.elf
+
+# 起動コマンド（試験アプリ起動の場合）
+# test_app.binをプロジェクトルートにコピーしてから実行
+cp src/UIAPduino/test_app_phase2/test_app.bin .
+spike --isa=rv32ec \
+  -m0x0:0x4000,0x20000000:0x800 \
+  --extlib=emulator/car01_plugin/build/libcar01_plugin.so \
+  --extension=car01_plugin \
+  src/UIAPduino/common_prog/common_prog.elf
 ```
 
 
