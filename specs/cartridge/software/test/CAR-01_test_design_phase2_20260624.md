@@ -947,10 +947,30 @@ python3 emulator/serial_monitor.py &
 
 # 試験用spi_flash.bin作成（恵梨沙フォント・ダミーカタログ・試験バイナリ含む）
 python3 tools/dummy_data_gen.py \
-  --with-font \
   --app src/UIAPduino/test_app_phase2/test_app.bin \
-  --output emulator/spi_flash.bin
+  --output spi_flash.bin
+
+# 恵梨沙フォント・画像リソースの書き込みは別途 tools/image_convert.py 等で実施
 ```
+
+**試験用spi_flash.bin構成（2026-06-25確定）：**
+生成ツール：tools/dummy_data_gen.py
+
+アドレス配置（アプリブロック16KB単位）：
+```
+0x008000: 恵梨沙フォント（64KB確保）
+0x098000: test_app.bin（16KB枠）
+0x09C000: 画像1（アニメ）29ブロック=116KB
+0x0B8000: 画像2（写真）29ブロック=116KB
+0x0D4000: 画像3（パワポ）29ブロック=116KB
+0x0F0000: 画像4（書籍）29ブロック=116KB
+```
+
+設計方針：
+試験リソースもアプリブロック単位で管理する。
+試験アプリだけ例外扱いしない。
+カタログ管理方式（IT-RSRC）の試験完了後に
+正式なカタログエントリ登録に移行する予定。
 
 **エミュレータ試験実行手順:**
 
