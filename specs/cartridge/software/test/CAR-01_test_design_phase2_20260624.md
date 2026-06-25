@@ -545,7 +545,7 @@
 | 期待値 | |t0 - t1| ≒ 48,000サイクル（43,200〜52,800の範囲） |
 | 合格基準 | サイクル数が43,200〜52,800の範囲内 |
 | 環境 | E（スタブ動作確認）/ R（実測値記録） |
-| 取得方法 | SysTick->CNT（0xE000F00C）を連続2回読んで差分を計算: t0=*(volatile uint32_t*)0xE000F00C、t1=*(volatile uint32_t*)0xE000F00C、diff=t1-t0 |
+| 取得方法 | SysTick->CNT（0xE000F008）を連続2回読んで差分を計算: t0=*(volatile uint32_t*)0xE000F008、t1=*(volatile uint32_t*)0xE000F008、diff=t1-t0 |
 | 判定方法 | 43200 <= diff <= 52800 |
 | ログ出力形式 | RC:UT-TIM-01 t0=%u t1=%u diff=%u PASS/FAIL |
 
