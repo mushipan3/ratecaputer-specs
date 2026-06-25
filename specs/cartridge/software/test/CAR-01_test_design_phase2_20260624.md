@@ -42,6 +42,26 @@
 
 ## 1. L1 単体試験
 
+### 試験実施順序
+
+以下の順序で実施すること。
+キー入力確認（UT-KEY-03〜05）が
+全試験の前提となるため最優先で実施する。
+
+優先順序：
+1. UT-KEY-03→UT-KEY-04→UT-KEY-05（キー入力確認）
+2. UT-SPI-01〜06（SPIマネージャ）
+3. UT-FRAM-01〜04（FRAMアクセス）
+4. UT-FLASH-01〜05（SPI Flash）
+5. UT-TFT-01〜05（TFTドライバ）
+6. UT-KEY-01〜02（キースキャン残り）
+7. UT-TIM-01（SysTick）
+8. UT-IAP-01〜04（IAP）
+9. L2結合試験（IT-BOOT〜IT-IAP）
+10. L3システム試験（ST-DISP〜ST-IAP）
+
+---
+
 各試験項目の記載フォーマット：
 
 | フィールド | 説明 |
@@ -73,6 +93,9 @@
 | 期待値 | SPI1 CR1: SPE=1・BR[2:0]=0x00（24MHz）・MSTR=1・CPOL=0・CPHA=0<br>全CSピンHIGH（非選択状態） |
 | 合格基準 | 期待値と一致すること |
 | 環境 | E+R |
+| 取得方法 | spi_manager_init()呼び出し後 SPI1->CTLR1（0x40013000）を直接読む。GPIOA->OUTDR（0x4001080C）bit2（PA2=CS_FLASH）、GPIOA->OUTDR bit1（PA1=CS_FRAM）、GPIOC->OUTDR（0x4001100C）bit0（PC0=CS_EINK）、GPIOD->OUTDR（0x4001140C）bit2（PD2=CS_YMF）を読む |
+| 判定方法 | SPE=(ctlr1>>6)&1==1、BR=(ctlr1>>3)&7==0、MSTR=(ctlr1>>2)&1==1、CPOL=(ctlr1>>1)&1==0、CPHA=(ctlr1>>0)&1==0、全CSピンbit==1（HIGH） |
+| ログ出力形式 | RC:UT-SPI-01 CTLR1=0x%08X SPE=%d BR=%d MSTR=%d CPOL=%d CPHA=%d CS_PA2=%d CS_PA1=%d CS_PC0=%d CS_PD2=%d PASS/FAIL |
 
 #### UT-SPI-02 FRAM 1バイト書き込み・読み出し
 
@@ -87,6 +110,9 @@
 | 期待値 | fram_read_byte()戻り値 = 0xA5（1回目）・0x5A（2回目） |
 | 合格基準 | 書き込み値と読み出し値が完全一致すること |
 | 環境 | E+R |
+| 取得方法 | fram_write_byte(0x00020000,0xA5)後にfram_read_byte(0x00020000)、fram_write_byte(0x00020001,0x5A)後にfram_read_byte(0x00020001) |
+| 判定方法 | r1==0xA5 かつ r2==0x5A |
+| ログ出力形式 | RC:UT-SPI-02 r1=0x%02X r2=0x%02X PASS/FAIL |
 
 #### UT-SPI-03 FRAM バースト書き込み・読み出し
 
@@ -101,6 +127,9 @@
 | 期待値 | memcmp(buf, readbuf, 256) == 0 |
 | 合格基準 | 全256バイト一致すること |
 | 環境 | E+R |
+| 取得方法 | 256Bパターン（0x00〜0xFF）をSRAMバッファに準備してfram_write(0x00020100,buf,256)、fram_read(0x00020100,rbuf,256)、memcmp(buf,rbuf,256)の戻り値 |
+| 判定方法 | memcmp==0 |
+| ログ出力形式 | RC:UT-SPI-03 memcmp=%d PASS/FAIL |
 
 #### UT-SPI-04 SPI Flash 1バイト読み出し
 
@@ -115,6 +144,9 @@
 | 期待値 | 読み出しが完了すること（フォルト・ハングなし）<br>SPI Flash書き込み済みの場合：カタログヘッダ先頭バイト（0x01=有効エントリ or 0xFF=空） |
 | 合格基準 | flash_read()がハング・フォルトなく完了すること |
 | 環境 | E+R |
+| 取得方法 | flash_read(0x000000,buf,1)を呼んで関数から戻ってくることを確認 |
+| 判定方法 | 関数が戻ればPASS（buf[0]の値も記録） |
+| ログ出力形式 | RC:UT-SPI-04 buf0=0x%02X PASS/FAIL |
 
 #### UT-SPI-05 CSピン排他制御確認
 
@@ -129,6 +161,9 @@
 | 期待値 | 選択デバイスのCSピンのみLOW・他はHIGH |
 | 合格基準 | CSピンの排他状態が期待値通りであること |
 | 環境 | E+R |
+| 取得方法 | spi_cs_select(SPI_DEV_FLASH)呼び出し後にGPIOA->OUTDR bit2（PA2）、bit1（PA1）、GPIOC->OUTDR bit0（PC0）、GPIOD->OUTDR bit2（PD2）を読む |
+| 判定方法 | PA2==0（LOW=選択中）、PA1==1・PC0==1・PD2==1（HIGH=非選択） |
+| ログ出力形式 | RC:UT-SPI-05 PA2=%d PA1=%d PC0=%d PD2=%d PASS/FAIL |
 
 #### UT-SPI-06 flash_to_fram_seq() 転送確認
 
@@ -143,6 +178,9 @@
 | 期待値 | memcmp(flash_data, fram_data, 256) == 0 |
 | 合格基準 | 全256バイト一致すること |
 | 環境 | E+R |
+| 取得方法 | flash_read(0x008000,flash_buf,256)、flash_to_fram_seq(0x008000,0x00020200,256)、fram_read(0x00020200,fram_buf,256)、memcmp(flash_buf,fram_buf,256) |
+| 判定方法 | memcmp==0 |
+| ログ出力形式 | RC:UT-SPI-06 memcmp=%d PASS/FAIL |
 
 ---
 
@@ -161,6 +199,9 @@
 | 期待値 | 全32バイト0xAAで読み出せること |
 | 合格基準 | memcmp一致 |
 | 環境 | E+R |
+| 取得方法 | 32Bバッファを0xAAで埋めてfram_write(0x00000,buf,32)、fram_read(0x00000,rbuf,32)、memcmp(buf,rbuf,32) |
+| 判定方法 | memcmp==0 |
+| ログ出力形式 | RC:UT-FRAM-01 memcmp=%d PASS/FAIL |
 
 #### UT-FRAM-02 セーブデータ領域アクセス
 
@@ -175,6 +216,9 @@
 | 期待値 | 各アドレスの読み出し値が書き込み値と一致すること |
 | 合格基準 | 全3点一致 |
 | 環境 | E+R |
+| 取得方法 | 0x02000・0x03FFF・0x05FFF の3点でfram_write_byte(addr,test_val)後にfram_read_byte(addr)の戻り値 |
+| 判定方法 | 各点で読み出し値==書き込み値 |
+| ログ出力形式 | RC:UT-FRAM-02 p1=0x%02X p2=0x%02X p3=0x%02X PASS/FAIL |
 
 #### UT-FRAM-03 コンテキストスタック領域アクセス
 
@@ -189,6 +233,9 @@
 | 期待値 | 各アドレスの読み出し値が書き込み値と一致すること |
 | 合格基準 | 全一致 |
 | 環境 | E+R |
+| 取得方法 | 0x10000・0x13880 の2点でfram_write_byte(addr,test_val)後にfram_read_byte(addr)の戻り値 |
+| 判定方法 | 各点で読み出し値==書き込み値 |
+| ログ出力形式 | RC:UT-FRAM-03 p1=0x%02X p2=0x%02X PASS/FAIL |
 
 #### UT-FRAM-04 フォント展開領域アクセス（境界確認）
 
@@ -203,6 +250,9 @@
 | 期待値 | 各アドレスの読み出し値が書き込み値と一致すること（アドレス間で値の混在なし） |
 | 合格基準 | 全3点一致・値の混在なし |
 | 環境 | E+R |
+| 取得方法 | 0x13880・0x1C080・0x23878 の3点に異なる値（0xAA・0xBB・0xCC）を書いて読み返す |
+| 判定方法 | 各点で読み出し値==書き込み値かつ値の混在なし |
+| ログ出力形式 | RC:UT-FRAM-04 p1=0x%02X p2=0x%02X p3=0x%02X PASS/FAIL |
 
 ---
 
@@ -221,6 +271,9 @@
 | 期待値 | 読み出し完了（値は状態依存：書き込み済み=0x01...、未書き込み=0xFF...） |
 | 合格基準 | flash_read()がハング・フォルトなく完了すること |
 | 環境 | E+R |
+| 取得方法 | flash_read(0x000000,buf,32)を呼ぶ |
+| 判定方法 | 関数が戻ればPASS（buf[0]の値も記録） |
+| ログ出力形式 | RC:UT-FLASH-01 buf0=0x%02X PASS/FAIL |
 
 #### UT-FLASH-02 フォント領域読み出し
 
@@ -235,6 +288,9 @@
 | 期待値 | 読み出し完了、buf[0]〜buf[7]が0xFF×8以外（有効フォントデータ） |
 | 合格基準 | 読み出し完了かつ0xFF×8でないこと |
 | 環境 | E（spi_flash.binロード必須）/ R（Phase 2.5完了後） |
+| 取得方法 | flash_read(0x008000,buf,8)を呼ぶ |
+| 判定方法 | buf[0]〜buf[7]が全て0xFFでない |
+| ログ出力形式 | RC:UT-FLASH-02 buf=%02X%02X%02X%02X not_all_ff=%d PASS/FAIL |
 
 #### UT-FLASH-03 アプリ領域書き込み・読み出し（セクタ消去）
 
@@ -248,7 +304,10 @@
 | 試験データ | addr=0x098000, sector_size=4096 |
 | 期待値 | buf[0]〜buf[15]がすべて0xFF |
 | 合格基準 | 全16バイト0xFF |
-| 環境 | E+R（Rは spi_flash_mgr 経由） |
+| 環境 | R（実機のみ）<br>理由: エミュレータはSPI Flash書き換えをエミュレートしない |
+| 取得方法 | iap.hのspi_erase_sector(0x09C000)相当の消去処理後にflash_read(0x09C000,buf,16) |
+| 判定方法 | buf[0]〜buf[15]が全て0xFF |
+| ログ出力形式 | RC:UT-FLASH-03 all_ff=%d PASS/FAIL |
 
 #### UT-FLASH-04 アプリ領域 4KBブロック書き込み・読み出し
 
@@ -262,7 +321,10 @@
 | 試験データ | addr=0x098000, pattern=0x00〜0xFF×16回, verify_len=256 |
 | 期待値 | memcmp(pattern, readbuf, 256) == 0 |
 | 合格基準 | 256バイト完全一致 |
-| 環境 | E+R |
+| 環境 | R（実機のみ）<br>理由: エミュレータはSPI Flash書き換えをエミュレートしない |
+| 取得方法 | 256Bパターンを書き込んでflash_readで読み返す。memcmp(pattern,readbuf,256) |
+| 判定方法 | memcmp==0 |
+| ログ出力形式 | RC:UT-FLASH-04 memcmp=%d PASS/FAIL |
 
 #### UT-FLASH-05 FLASH_APP_BASE定数確認
 
@@ -277,6 +339,9 @@
 | 期待値 | 両方の読み出しがハングなく完了すること |
 | 合格基準 | ハング・フォルトなし |
 | 環境 | E+R |
+| 取得方法 | flash_read(0x097FFC,buf,4)とflash_read(0x098000,buf2,4)を呼ぶ |
+| 判定方法 | 両関数が戻ればPASS |
+| ログ出力形式 | RC:UT-FLASH-05 before=0x%08X after=0x%08X PASS/FAIL |
 
 ---
 
@@ -295,6 +360,9 @@
 | 期待値 | tft_init()完了・TFT画面が白色 |
 | 合格基準 | 完了かつ画面が白色表示されること（目視） |
 | 環境 | E+R |
+| 取得方法 | tft_init()呼び出し後にログ出力。SDL2ウィンドウで目視確認 |
+| 判定方法 | 関数が戻りかつ画面が白色（目視） |
+| ログ出力形式 | RC:UT-TFT-01 init=done 目視確認要 |
 
 #### UT-TFT-02 全画面塗りつぶし（単色）
 
@@ -309,6 +377,9 @@
 | 期待値 | 各呼び出し後に画面全体が指定色に変わること |
 | 合格基準 | 3色とも全画面が正しい色で表示されること（目視） |
 | 環境 | E+R |
+| 取得方法 | tft_fill(DISP_RED)・tft_fill(DISP_GREEN)・tft_fill(DISP_BLUE)を順に呼ぶ。SDL2ウィンドウで目視確認 |
+| 判定方法 | 3色とも全画面正しい色（目視） |
+| ログ出力形式 | RC:UT-TFT-02 RED=done GREEN=done BLUE=done 目視確認要 |
 
 #### UT-TFT-03 描画ウィンドウ設定
 
@@ -323,6 +394,9 @@
 | 期待値 | 40×40ピクセルの赤い矩形が左上(10,10)に描画されること |
 | 合格基準 | 矩形の範囲・位置・色が目視で正しいこと |
 | 環境 | E+R |
+| 取得方法 | tft_set_window(10,10,49,49)後にDISP_REDでtft_write_pixel()を1600回呼ぶ。SDL2ウィンドウで目視確認 |
+| 判定方法 | 左上(10,10)に40×40赤矩形（目視） |
+| ログ出力形式 | RC:UT-TFT-03 pixels=1600 目視確認要 |
 
 #### UT-TFT-04 英数文字描画
 
@@ -337,6 +411,9 @@
 | 期待値 | 'A'の字形が座標(0,0)に8×8pxで描画されること |
 | 合格基準 | 字形が目視で認識できること |
 | 環境 | E+R（フォントロード後） |
+| 取得方法 | 恵梨沙フォントのインデックスを指定してtft_draw_char_elysia(idx,0,0,DISP_WHITE,DISP_BLACK)。SDL2ウィンドウで目視確認。使用するインデックス値をRC:xxxログで出力すること |
+| 判定方法 | 指定文字が目視で認識できる |
+| ログ出力形式 | RC:UT-TFT-04 idx=%d 目視確認要 |
 
 #### UT-TFT-05 文字列描画
 
@@ -351,6 +428,9 @@
 | 期待値 | 「HELLO」が左詰め9px間隔で描画されること（合計幅=5×9-1=44px） |
 | 合格基準 | 文字列が目視で認識できること |
 | 環境 | E+R |
+| 取得方法 | 5文字分のインデックス配列を用意してtft_draw_string_elysia(indices,5,0,0,DISP_WHITE,DISP_BLACK)。SDL2ウィンドウで目視確認 |
+| 判定方法 | 5文字が9px間隔で目視認識できる |
+| ログ出力形式 | RC:UT-TFT-05 len=5 目視確認要 |
 
 ---
 
@@ -369,6 +449,9 @@
 | 期待値 | keyscan_init()完了（ハングなし）・I2C ACK受信 |
 | 合格基準 | 完了・ハングなし |
 | 環境 | E+R |
+| 取得方法 | keyscan_init()呼び出し後にログ出力 |
+| 判定方法 | 関数が戻ればPASS（ハングなし） |
+| ログ出力形式 | RC:UT-KEY-01 init=done PASS/FAIL |
 
 #### UT-KEY-02 ボタン入力読み取り（TBD）
 
@@ -407,6 +490,9 @@
 | 期待値 | keyscan_get()戻り値 == 0x00 |
 | 合格基準 | 戻り値が0x00 |
 | 環境 | E+R |
+| 取得方法 | input_state.binに0x00を書いた状態でkeyscan_get()を呼び戻り値を取得 |
+| 判定方法 | 戻り値 == 0x00 |
+| ログ出力形式 | RC:UT-KEY-03 val=0x%02X PASS/FAIL |
 
 #### UT-KEY-04 keyscan_get_button() 単一ボタン確認
 
@@ -421,6 +507,9 @@
 | 期待値 | 未押下=false・押下=true |
 | 合格基準 | 期待値通りであること |
 | 環境 | E+R |
+| 取得方法 | ①input_state.binに0x00を書いてkeyscan_get_button(BTN_OK)を呼ぶ ②input_state.binに0x10を書いてkeyscan_get_button(BTN_OK)を呼ぶ |
+| 判定方法 | ①==false ②==true |
+| ログ出力形式 | RC:UT-KEY-04 no_press=%d press=%d PASS/FAIL |
 
 #### UT-KEY-05 keyscan_wait() タイムアウト確認
 
@@ -435,6 +524,9 @@
 | 期待値 | 戻り値 == 0x10 |
 | 合格基準 | 戻り値が0x10 |
 | 環境 | E+R |
+| 取得方法 | input_state.binに0x10を書いた状態でkeyscan_wait(0)を呼び戻り値を取得 |
+| 判定方法 | 戻り値 == 0x10 |
+| ログ出力形式 | RC:UT-KEY-05 ret=0x%02X PASS/FAIL |
 
 ---
 
@@ -453,6 +545,9 @@
 | 期待値 | |t0 - t1| ≒ 48,000サイクル（43,200〜52,800の範囲） |
 | 合格基準 | サイクル数が43,200〜52,800の範囲内 |
 | 環境 | E（スタブ動作確認）/ R（実測値記録） |
+| 取得方法 | SysTick->CNT（0xE000F00C）を連続2回読んで差分を計算: t0=*(volatile uint32_t*)0xE000F00C、t1=*(volatile uint32_t*)0xE000F00C、diff=t1-t0 |
+| 判定方法 | 43200 <= diff <= 52800 |
+| ログ出力形式 | RC:UT-TIM-01 t0=%u t1=%u diff=%u PASS/FAIL |
 
 ---
 
@@ -471,6 +566,9 @@
 | 期待値 | iap_run()呼び出し後にソフトリセット発動・試験バイナリが起動すること |
 | 合格基準 | TFTに「IAP-B OK」が表示されること（または試験バイナリのLED点滅確認） |
 | 環境 | E+R |
+| 取得方法 | iap_run()呼び出し→リセット後に起動したバイナリがRC:UT-IAP-01 PASSをログ出力 |
+| 判定方法 | リセット後のログにPASSが出る |
+| ログ出力形式 | RC:UT-IAP-01 boot_from_iap=1 PASS |
 
 #### UT-IAP-02 iap_call() パターンA-1 同一アプリ内呼び出し
 
@@ -485,6 +583,9 @@
 | 期待値 | iap_return()後に呼び出し元が再開・g_test_val==0x1234 |
 | 合格基準 | 呼び出し元への復帰・SRAMの値が復元されること |
 | 環境 | E+R（**実機でのiap_ctx.S検証PENDING #3**） |
+| 取得方法 | iap_call()でサブモジュールを起動、iap_return()後にg_test_val（SRAM上の変数）をRC:xxxログで出力 |
+| 判定方法 | g_test_val == 0x1234 |
+| ログ出力形式 | RC:UT-IAP-02 g_test_val=0x%04X PASS/FAIL |
 
 #### UT-IAP-03 iap_return() SRAMイメージ復元確認
 
@@ -499,6 +600,9 @@
 | 期待値 | 各パターンがiap_return()後に復元されていること |
 | 合格基準 | 全パターン一致 |
 | 環境 | E+R（実機検証PENDING） |
+| 取得方法 | SRAM上の複数アドレスにパターンを書いてiap_call→iap_return後に読み返す。mismatch_count=不一致バイト数 |
+| 判定方法 | mismatch_count == 0 |
+| ログ出力形式 | RC:UT-IAP-03 mismatch=%d PASS/FAIL |
 
 #### UT-IAP-04 iap_restore_from_fram() 自己復元確認
 
@@ -513,6 +617,9 @@
 | 期待値 | FRAMバックアップから起動すること |
 | 合格基準 | バックアップバイナリが起動すること |
 | 環境 | E+R |
+| 取得方法 | FRAM_BACKUP_ADDR(0x06000)に試験バイナリを書いてiap_restore_from_fram()呼び出し→リセット後に起動したバイナリがRC:UT-IAP-04 PASSをログ出力 |
+| 判定方法 | リセット後のログにPASSが出る |
+| ログ出力形式 | RC:UT-IAP-04 boot_from_fram=1 PASS |
 
 ---
 
@@ -546,7 +653,7 @@
 | 試験データ | GPIO2=HIGH（PA2プルアップ） |
 | 期待値 | 通常起動フローに進まずspi_flash_mgr起動 |
 | 合格基準 | spi_flash_mgr起動・PA1=HIGH |
-| 環境 | E+R |
+| 環境 | R（実機のみ）<br>理由: エミュレータはGPIO INDRが常に0返しのためGPIO2=HIGH分岐を再現できない |
 
 #### IT-BOOT-03 上下キー同時押しでブートローダセルフアップデートモード
 
@@ -938,12 +1045,14 @@ spike --isa=rv32ec \
   src/UIAPduino/common_prog/common_prog.elf
 
 # Phase 1: SPI Flash / FRAMファイル確認
-ls -la emulator/spi_flash.bin   # 16MB
-ls -la emulator/fram.bin        # 512KB
+ls -la spi_flash.bin   # 16MB（プロジェクトルートに配置）
+ls -la fram.bin        # 512KB（プロジェクトルートに配置）
 
 # Phase 2: panel.html確認
-python3 emulator/serial_monitor.py &
-# ブラウザで panel.html を開いてTFT表示・ジョイスティックUIを確認
+python3 emulator/panel/serial_monitor.py \
+  --frame tft_frame.bin --port 8765 &
+# ブラウザで emulator/panel/panel.html を開いて
+# TFT表示・ジョイスティックUIを確認
 
 # 試験用spi_flash.bin作成（恵梨沙フォント・ダミーカタログ・試験バイナリ含む）
 python3 tools/dummy_data_gen.py \
@@ -1095,3 +1204,4 @@ python3 tools/log_viewer.py --input log_*.json
 | 日付 | 内容 |
 |---|---|
 | 2026-06-24 | 初版作成 |
+| 2026-06-25 | 試験実施順序追加（UT-KEY-03〜05を最優先）・全L1試験項目に取得方法・判定方法・ログ出力形式を追加・UT-FLASH-03/04・IT-BOOT-02をR（実機のみ）に変更・SPI1 CTLR1エミュレート追加に伴いUT-SPI-01をE+Rに変更 |
