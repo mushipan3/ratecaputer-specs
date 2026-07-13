@@ -205,9 +205,16 @@ RcApiは固定アドレス **0x08A0** に配置される12関数のAPIテーブ�
 iap_run(uint32_t flash_addr)
     // アプリ切り替え（パターンB・戻らない）
 
-iap_call(uint32_t flash_addr, uint8_t caller_id, uint8_t call_type)
-    // モジュール呼び出し（パターンA・戻る）
+iap_call(uint16_t callee_res_id, uint8_t catalog_idx, uint8_t call_type)
+    // モジュール（サブプログラム）呼び出し（パターンA・戻る）
+    // callee_res_id: 呼び出し先のリソースID（種別0x0）
+    // catalog_idx: 呼び出し先アプリのカタログインデックス（0xFF=自アプリ=A-1）
     // call_type: IAP_CALL_INTERNAL=0 / IAP_CALL_EXTERNAL=1
+    // 戻り値: IapCallStatus（4B・status/fram_free）
+    // ※2026-07-13改訂: flash_addr直指定→リソースID指定へ（可変サイズ
+    //   コンテキストスイッチ設計）。旧caller_id引数は廃止（呼び出し元の
+    //   同一性はIAP機構が保持する実行状態から取得）。実装移行は可変版
+    //   実装と同時（現行ファームは旧シグネチャで動作中）
 
 iap_return(void)
     // 呼び出し元に戻る
@@ -555,4 +562,5 @@ MEMORY {
 | 日付 | バージョン | 内容 |
 |---|---|---|
 | 2026-06-15 | Rev.0.1 | 新規作成。bootloader_dev_spec_20260522_1.md・cartridge_master §2.8・§2.9・§1.8の共通プログラム関連記述を統合。CAR-01固有仕様として独立ファイル化。 |
+| 2026-07-13 | Rev.0.2 | §5.2 iap_call()シグネチャ改訂: flash_addr直指定→リソースID指定（callee_res_id+catalog_idx）・caller_id廃止・IapCallStatus戻り値追加（可変サイズコンテキストスイッチ設計・実装移行は可変版実装と同時） |
 | 2026-07-13 | Rev.0.2 | §7 FRAMレイアウト全面再配置: 不変部/タスク比例部の分離原則を導入（擬似マルチタスク対応の布石）。フォントを0x00000先頭へ・タスクスロット領域(0x20000〜)を新設（メタ8KB+CTXスタック16KB+作業領域/スロット）。コンテキストスタックを固定7段14,464Bから可変長・16KB枠へ（可変サイズコンテキストスイッチ設計）。App Area配置状態表を管理領域内に新設。実装移行は可変版実装と同時に1回で実施（現行ファームは旧レイアウトで動作中）。 |
