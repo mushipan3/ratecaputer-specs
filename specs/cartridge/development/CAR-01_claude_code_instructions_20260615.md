@@ -384,11 +384,23 @@ void iap_run(uint32_t flash_addr);
 #define IAP_CALL_INTERNAL  0  // A-1: 同一アプリ内モジュール
 #define IAP_CALL_EXTERNAL  1  // A-2: 別アプリ
 
-// 情報受け渡し領域（FRAM・メタ情報領域内に配置）
-#define IAP_ARG_INTERNAL   0x00016680UL  // A-1引数（64B）
-#define IAP_RET_INTERNAL   0x000166C0UL  // A-1戻り値（64B）
-#define IAP_ARG_EXTERNAL   0x00016700UL  // A-2引数（64B）
-#define IAP_RET_EXTERNAL   0x00016740UL  // A-2戻り値（64B）
+// 情報受け渡し領域（FRAM管理領域・2026-07-17にメタ情報領域内から移設・各256B）
+// 実装の正は common_prog の iap.h（下記は同名の別名定義ではなく iap.h の定数を使うこと）
+#define FRAM_IAP_A1_ARG    0x0001A900UL  // A-1引数（256B）
+#define FRAM_IAP_A1_RET    0x0001AA00UL  // A-1戻り値（256B）
+#define FRAM_IAP_A2_ARG    0x0001AB00UL  // A-2引数（256B）
+#define FRAM_IAP_A2_RET    0x0001AC00UL  // A-2戻り値（256B）
+#define FRAM_IAP_ARG_SIZE  256u
+//
+// ⚠ 旧定義（IAP_ARG_INTERNAL 0x00016680 等・メタ情報領域内・各64B）は使用しないこと。
+//   メタ情報領域はアプリのFlashメタブロックのキャッシュであり、A-2（別アプリ）呼び出し
+//   ／復帰のたびに共通プログラムがFlash原本から再ロードする（呼び出し先のリソース
+//   ディレクトリを引くために必要な動作）。このため旧配置では A-2引数は呼び出し時に、
+//   A-2戻り値は復帰時に、機構自身が塗り潰していた＝A-2の引数受け渡しは成立しなかった。
+//   2026-07-17に4領域ともFRAM管理領域へ移設して解消（IT-IAP-03/04で実証済み）。
+//   規約: 引数・戻り値の受け渡しには上記の管理領域を使う。メタ情報領域はアプリが
+//   書き込む場所ではない。引数は呼び出し直前に書き、呼び出し先は入場直後に読む。
+//   継続して必要な値は自分のZone C（退避・復元される）へ写すこと。
 
 void iap_call(uint32_t flash_addr, uint8_t module_id, uint8_t call_type);
 void iap_return(void);
