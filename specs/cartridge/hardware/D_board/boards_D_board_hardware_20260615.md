@@ -36,8 +36,8 @@
 | cartridge_master_20260612.md | CAR-01全体規格・I2Cバストポロジー |
 | boards_A_board_hardware_20260612.md | VCC_3V3_OUT供給元・電源シーケンス |
 | boards_D_board_firmware_20260612.md | ATtiny1604ファームウェア仕様・動作モード |
-| features/japanese_input.md | 日本語入力サブシステム仕様 |
-| features_system_menu_20260612.md | システムメニュー・音量調整・ジョイスティック操作定義 |
+| CAR-01_japanese_input_20260717.md | 日本語入力サブシステム仕様 |
+| features_system_menu_20260615.md | システムメニュー・音量調整・ジョイスティック操作定義 |
 
 ---
 
@@ -45,7 +45,7 @@
 
 D基板はラテカピュータ（CAR-01規格）の日本語入力フロントエンドおよびシステムUI操作を担う専用基板である。ATtiny1604・CH1115 OLED・SKRHAAEジョイスティックの全機能をこの1枚に集約する。
 
-ジョイスティック入力の監視・OLED描画・日本語入力UIをATtiny1604が完結させ、UIAPduino（CH32V003）のCPU負荷を最小化する。日本語入力システムの詳細は `specs/features/japanese_input.md` を、システムメニュー操作の詳細は `features_system_menu_20260612.md` を参照。
+ジョイスティック入力の監視・OLED描画・日本語入力UIをATtiny1604が完結させ、UIAPduino（CH32V003）のCPU負荷を最小化する。日本語入力システムの詳細は `CAR-01_japanese_input_20260717.md` を、システムメニュー操作の詳細は `features_system_menu_20260615.md` を参照。
 
 ---
 

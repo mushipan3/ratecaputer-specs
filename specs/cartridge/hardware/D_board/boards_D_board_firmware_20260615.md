@@ -23,7 +23,7 @@
 
 ## 1. 概要
 
-本書はD基板搭載ATtiny1604のファームウェア仕様を定める。ATtiny1604はUIAPduino（CH32V003）のI2Cスレーブとして動作し、ジョイスティック入力・OLED描画・スリープ管理を担う。日本語入力システムおよびシステムメニューを含むシステム機能全般との協調動作の詳細は `specs/features/japanese_input.md` および `specs/features/system_menu.md` を参照。
+本書はD基板搭載ATtiny1604のファームウェア仕様を定める。ATtiny1604はUIAPduino（CH32V003）のI2Cスレーブとして動作し、ジョイスティック入力・OLED描画・スリープ管理を担う。日本語入力システムおよびシステムメニューを含むシステム機能全般との協調動作の詳細は `CAR-01_japanese_input_20260717.md` および `features_system_menu_20260615.md` を参照。
 
 ---
 
@@ -47,7 +47,7 @@ UIAPduino（CH32V003）をマスターとする共通I2Cバス上でスレーブ
 | コマンド種別 | 方向 | 内容 |
 |---|---|---|
 | Read（RAWモード） | ATtiny1604→UIAPduino | ジョイスティック状態1バイト（bit7=0） |
-| **Write/Read（システムコマンド）** | **ATtiny1604→UIAPduino** | **SYS_CMDバイト（bit7=1）：メニュー開閉・音量変更等。詳細はfeatures/system_menu.md参照** |
+| **Write/Read（システムコマンド）** | **ATtiny1604→UIAPduino** | **SYS_CMDバイト（bit7=1）：メニュー開閉・音量変更等。詳細はfeatures_system_menu_20260615.md参照** |
 | Write（モード通知） | UIAPduino→ATtiny1604 | 日本語入力モード開始・終了・スリープ指示 |
 | Write（バッテリー残量） | UIAPduino→ATtiny1604 | UIAPduinoがATtiny202から取得した残量値を転送 |
 
@@ -148,7 +148,7 @@ ATtiny1604: 通常時スリープサイクルへ復帰
 | Phase 2 | ATtiny1604ファームウェア RAWモード・ひらがな入力・OLED描画・ウェアレベリング | attiny1604_fw.hex |
 | Phase 5 | 呼び出し元アプリ連携試験 | 結合動作確認 |
 
-※Phase 1・3・4はUIAPduino側の実装。`specs/features/japanese_input.md` 参照。
+※Phase 1・3・4はUIAPduino側の実装。`CAR-01_japanese_input_20260717.md` 参照。
 
 ---
 

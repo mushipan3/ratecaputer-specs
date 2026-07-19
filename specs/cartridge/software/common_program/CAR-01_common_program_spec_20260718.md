@@ -44,7 +44,7 @@
 | boards_A_board_hardware_20260615.md | 電源管理・CART_READY通知 |
 | boards_B_board_hardware_20260615.md | YMF825制御・音量レジスタ |
 | boards_C_board_hardware_20260615.md | SPI Flash・FRAM構成 |
-| features/japanese_input.md | Wnn変換エンジン（App Area実装・3層） |
+| CAR-01_japanese_input_20260717.md | Wnn変換エンジン（App Area実装・3層） |
 | features_system_menu_20260615.md | システムメニュー・ボリューム制御 |
 | CAR-01_app_dev_guide_20260717.md | アプリ開発者向けガイド（3層） |
 

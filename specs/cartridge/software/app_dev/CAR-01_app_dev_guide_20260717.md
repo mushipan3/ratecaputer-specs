@@ -34,7 +34,7 @@
 |---|---|
 | CAR-01_common_program_spec_20260615.md | 1層・2層の詳細仕様・FRAMレイアウト・SPI Flashレイアウト |
 | cartridge_master_20260615.md | CAR-01全体規格・ストレージアーキテクチャ |
-| features/japanese_input.md | 日本語入力エンジン（Wnn）の使い方 |
+| CAR-01_japanese_input_20260717.md | 日本語入力エンジン（Wnn）の使い方 |
 | features_system_menu_20260615.md | システムメニューとの連携 |
 
 ---
