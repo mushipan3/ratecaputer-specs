@@ -253,13 +253,11 @@ App Area（8KB）内:
 
 ## 8. 日本語表示
 
-恵梨沙フォント（6877文字・各8B）はブートローダ起動時にSPI Flash（0x008000）からFRAM作業領域へ自動展開される（約18ms）。アプリ開発者はフォントロード処理を書く必要はない。
+恵梨沙フォント（6877文字・各8B）は **SPI Flash（0x008000）に常駐し、グリフを都度 SPI Flash から直読み**する（`common_program_spec` Rev.0.6 で FRAM 展開を廃止。FRAM と SPI Flash は同一SPIバス・同一24MHz・同一READ方式のため展開しても速度は変わらず、起動時の約18ms転送と64KBのFRAM消費が消えた）。アプリ開発者はフォントのロードもアドレス計算も書く必要はなく、描画関数にインデックスを渡すだけでよい。
 
 ```c
-// 恵梨沙フォントindexからFRAMアドレスを計算
-uint32_t char_addr = FONT_FRAM_BASE + (elysia_index * 8);
-
-// 文字データをFRAMから読み出してディスプレイに描画
+// 恵梨沙フォントindex配列をそのまま渡す。SPI Flash直読みは共通プログラム内部で行われる
+// （アプリ側でフォントアドレスを計算する必要はない）
 RcApi.disp_draw_string_elysia(x, y, elysia_index_array, len, color);
 ```
 
