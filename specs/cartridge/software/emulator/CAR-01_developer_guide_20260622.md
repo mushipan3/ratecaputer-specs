@@ -10,7 +10,7 @@
 > - `boards_A_board_hardware_20260617.md`（バッテリー表示の挙動のみ）
 > - `boards_B_board_hardware_20260703.md`（音声まわり）
 > - `boards_C_board_hardware_20260615.md`（ストレージまわり）
-> - `boards_D_board_hardware_20260615.md`（入力・OLEDまわり）
+> - `boards_D_board_hardware_20260721.md`（入力・OLEDまわり）
 > - `CAR-01_emulator_dev_20260622.md`（エミュレータ仕様）
 >
 > 公開配布前に、各章のレジスタアドレス・ピン番号等の詳細を元の個別仕様書と突き合わせて確認すること。特にプラットフォームAPIの最終的な関数シグネチャはPhase 2〜3の実装段階で変わる可能性がある。

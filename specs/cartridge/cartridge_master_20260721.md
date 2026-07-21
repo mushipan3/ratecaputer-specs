@@ -1,6 +1,6 @@
 # ラテカピュータ カートリッジ規格 目論見書
 
-**Rev. 1.8 — 2026年7月18日**
+**Rev. 1.9 — 2026年7月21日**
 
 ---
 
@@ -785,7 +785,7 @@ SPVDD=5V（MT3608昇圧から）/ IOVDD=VDD=3.3V（デュアル電源構成）�
 | PC0 | CS_DISP | OUT | メインディスプレイ CS（独立デバイス・e-ink・TFT共通） |
 | PC1 | I2C_SDA | INOUT | 共通I2Cバス SDA（マスター） |
 | PC2 | I2C_SCL | OUT | 共通I2Cバス SCL（マスター） |
-| PC3 | PWM_AUDIO | OUT | ADPCM PWM → RC-LPF → B基板AUDIO_INパッド |
+| PC3 | （未割り当て・解放） | — | 旧: PWM_AUDIO（ADPCM PWM → RC-LPF → B基板AUDIO_INパッド）。新B基板ではADPCM再生をCH32V303が担当しAUDIO_INパッド廃止のため解放。用途未定 |
 | PC4 | DC_DISP | OUT | メインディスプレイ DC（独立デバイス・e-ink・TFT共通） |
 | PC5 | SPI_SCK | OUT | SPIバス共通 |
 | PC6 | SPI_MOSI | OUT | SPIバス共通 |
@@ -795,8 +795,8 @@ SPVDD=5V（MT3608昇圧から）/ IOVDD=VDD=3.3V（デュアル電源構成）�
 | PD2 | CS_YMF825 | OUT | YMF825 CS（B基板） |
 | PD3 | （USB D+） | — | USB専用・使用不可 |
 | PD4 | （USB D−） | — | USB専用・使用不可 |
-| PD5 | RST_DISP | OUT | メインディスプレイ RST（独立デバイス・e-ink・TFT共通）/ UART TX兼用（試験Phase 1）/ B基板AUDIO_INパッドへ接続（製品版） |
-| PD6 | IRQ_N / LOCAL_UPDI_A | IN | YMF825割り込み / ATtiny202アップデート時: UPDI線（兼用・アップデート中は描画停止） |
+| PD5 | RST_DISP / UART_TX（CH32V303） | OUT | メインディスプレイ RST（独立デバイス・e-ink・TFT共通）/ UART TX兼用（試験Phase 1）/ **製品版=CH32V303 UART_TX（常時）**。RST_DISPは起動時一回限りのパルスのためUART通信中と競合しない |
+| PD6 | UART_RX（CH32V303）/ LOCAL_UPDI_A | IN | **製品版=CH32V303 UART_RX（常時）**。新B基板ではYMF825がCH32V303配下に移管されIRQ_NはUIAPduinoに届かないため解放 / ATtiny202アップデート時: UPDI線（兼用） |
 | PD7 | NRST / RST_YMF | IN | MCUリセット兼YMF825リセット（B基板と共通接続） |
 | PA1 | CS_FRAM1 | OUT | FRAM #1 CS（MB85RS4MT）|
 | PA2 | CS_FLASH | OUT | SPI Flash（W25Q128JV）CS |
@@ -824,7 +824,8 @@ UIAPduinoからは直接出力しない。UIAPduinoがI2C経由でATtiny202（A�
 |---------|-----|-----|
 | Phase 1：ブートローダ書き換え・確認プログラム検証 | UART TX（ディスプレイ未接続） | UART RX → シリアルUSB変換アダプタ |
 | Phase 2以降：試験ログ保管可能になって以降 | RST_DISP | CS_FRAM_LOG → FRAM #2 |
-| 製品版 | RST_DISP | IRQ_N（YMF825割り込み）兼LOCAL_UPDI_A |
+| 旧製品版（旧B基板・YMF825単発版） | RST_DISP / B基板AUDIO_INへ | IRQ_N（YMF825割り込み）兼LOCAL_UPDI_A |
+| 新製品版（新B基板・ステレオFM版・YMF825×2+CH32V303） | RST_DISP / CH32V303 UART_TX | CH32V303 UART_RX 兼LOCAL_UPDI_A |
 
 **TFTディスプレイ（CSなし）のSPIバス共有時の注意事項（TFT版のみ）：**
 
@@ -1630,3 +1631,4 @@ UIAPduinoをキャリアボードの上に重ねる2段構造。UIAPduinoの足�
 | 2026-07-15 | Rev.1.6 内蔵Flashレイアウトのアドレス是正: 共通プログラム0x0800〜0x1DFF（5.5KB）・共通モジュール置き場0x1E00〜0x1FFF（512B）・App Area 0x2000〜0x3FFF（8KB）。旧図表の0x1BFF/0x1C00/0x1E00系はTFT版App Area拡大構想（10KB時代）の名残による誤りで、サイズ表記（5.5KB/8KB）と自己矛盾していた。実装・試験環境全域の是正はratecaputerリポジトリ側コミットeb13087（回帰全PASS）で完了済み |
 | 2026-07-17 | Rev.1.7 **§1.8 IAP引数・戻り値エリアをメタ情報領域内（0x1680〜0x177F・各64B）からFRAM管理領域（0x1A900/0x1AA00/0x1AB00/0x1AC00・各256B）へ移設**（実バグ修正・2026-05確定分の是正）。**旧配置ではA-2（別アプリ間）の引数受け渡しが原理的に成立していなかった**: A-2では共通プログラムが、呼び出し時に呼び出し先アプリのメタ8KBを、復帰時に呼び出し元アプリのメタ8KBを、それぞれFlash原本から再転送する（呼び出し先のリソースディレクトリを引くために必要でA-2に本質的な動作）ため、**A-2引数は呼び出し時に、A-2戻り値は復帰時に、機構自身が塗り潰していた**。日本語入力Wnn（A-2公開サービスとして設計済み・A-2引数エリアでひらがな文字列を受け取る）は実装すれば必ず踏むバグだった。A-1（メタ入替なし）のみ旧配置に残す案も検討したが、「引数を書く→A-2呼び出し→A-1呼び出し」の順で無言で失われる（機構は引数エリアを参照しないため検出不能）ため4領域とも移設し、**メタ情報領域を純粋なFlashキャッシュとした**。0x1680〜0x177Fは予約（未使用）。サイズ拡大（64B→256B）の根拠: 機構が参照も転送もしないため実行時コストはゼロで、公開ABIは後からの拡大が破壊的。共通プログラムはコード変更ゼロ（定数追加のみ）。IT-IAP-03/04で実証（旧配置へ戻すネガティブコントロールでA-2呼び出しは成功しながら引数だけが壊れることを再現）。ratecaputer側コミット27b98c8 |
 | 2026-07-18 | Rev.1.8 **フォントをFRAM展開からSPI Flash直読みへ移行＋96KB×4スロット化**。§SPI Flashレイアウト: フォント枠64KB→**384KB＝96KB×4**（slot0=0x008000/slot1=0x020000/slot2=0x038000/slot3=0x050000・12,288文字/スロット）。**全スロットが単一の統一インデックス空間を共有**するため同じidxが全字体で同じ文字を指す＝**字体切替はベースアドレスの差し替えのみ**（美咲3字体＋恵梨沙1を想定）。システム予約領域は512KB→**192KB**（0x068000〜）へ縮小、**アプリ領域0x098000は不変**。**移行の理由**: FRAMとSPI Flashは同一SPIバス・同一24MHz・同一READ方式であり、共通プログラムの実装でも両者は速度設定を共有している。当初「FRAMはSRAM相当の速さ」という前提でフォントを展開していたがその前提は成立せず、グリフ読み出しのコストはCS選択先が変わるだけで、FRAM展開は64KB消費＋起動時55KB転送（約18ms）を払うだけだった。フォント原本は元からSPI Flash 0x008000にありデータは移動していない。**波及**: FRAM側のフォント展開枠64KBが廃止され、跡地は予備バッファとして確保（FRAMマップの正本はCAR-01_common_program_spec Rev.0.6）。スタンダード版作業領域の空きは約110KB→**約170KB**（フォント展開55KBの消費が消滅）。実測: 共通プログラム FLASH 5,516→5,552B（+36B・余裕80B）。回帰: 全4スイート47項目PASS。ratecaputer側コミット0b3a529 |
+| 2026-07-21 | Rev.1.9 **§2.5 新B基板（ステレオFM版・YMF825×2+CH32V303）採用に伴うピンアサイン変更を反映**。PC3(PWM_AUDIO)を解放（新B基板はADPCM再生をCH32V303が担当しAUDIO_INパッド廃止）。PD5をRST_DISP兼CH32V303 UART_TXに変更（RST_DISPは起動時一回限りのパルスのためUART通信中と競合しない）。PD6をCH32V303 UART_RX兼LOCAL_UPDI_Aに変更（YMF825がCH32V303配下に移管しIRQ_NがUIAPduinoに届かなくなるため解放）。機種別接続表に旧製品版/新製品版の2行を明記。詳細正本=boards_B_board_hardware_20260703.md Rev.1.0 / boards_B_board_firmware_20260703.md Rev.1.0。CH32V303のPA13/PA14がSWDIO/SWCLK兼UART3_TX2/RX2であることをデータシートで確認済み。旧基板は_archive/cartridge_master_20260718.mdおよび_archive/boards_B_board_hardware_20260615.mdに保存 |
