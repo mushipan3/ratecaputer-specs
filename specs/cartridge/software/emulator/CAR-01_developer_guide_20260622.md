@@ -8,7 +8,7 @@
 > 本書は以下の内部仕様書から、アプリ開発者に必要な情報を抽出・統合したドラフトである。
 > - `cartridge_master_20260617.md`
 > - `boards_A_board_hardware_20260617.md`（バッテリー表示の挙動のみ）
-> - `boards_B_board_hardware_20260615.md`（音声まわり）
+> - `boards_B_board_hardware_20260703.md`（音声まわり）
 > - `boards_C_board_hardware_20260615.md`（ストレージまわり）
 > - `boards_D_board_hardware_20260615.md`（入力・OLEDまわり）
 > - `CAR-01_emulator_dev_20260622.md`（エミュレータ仕様）
