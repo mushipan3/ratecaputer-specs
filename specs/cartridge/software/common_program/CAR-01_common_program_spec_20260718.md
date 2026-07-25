@@ -45,7 +45,7 @@
 | boards_B_board_hardware_20260703.md | YMF825制御・音量レジスタ（新版=CH32V303経由。詳細はboards_B_board_firmware_20260703.md） |
 | boards_C_board_hardware_20260615.md | SPI Flash・FRAM構成 |
 | CAR-01_japanese_input_20260717.md | Wnn変換エンジン（App Area実装・3層） |
-| features_system_menu_20260615.md | システムメニュー・ボリューム制御 |
+| features_system_menu_20260725.md | システムメニュー・ボリューム制御 |
 | CAR-01_app_dev_guide_20260717.md | アプリ開発者向けガイド（3層） |
 
 **旧ドキュメントとの関係：**

@@ -35,7 +35,7 @@
 | CAR-01_common_program_spec_20260615.md | 1層・2層の詳細仕様・FRAMレイアウト・SPI Flashレイアウト |
 | cartridge_master_20260615.md | CAR-01全体規格・ストレージアーキテクチャ |
 | CAR-01_japanese_input_20260717.md | 日本語入力エンジン（Wnn）の使い方 |
-| features_system_menu_20260615.md | システムメニューとの連携 |
+| features_system_menu_20260725.md | システムメニューとの連携 |
 
 ---
 
@@ -247,7 +247,7 @@ App Area（8KB）内:
 
 **YMF825初期化：** アプリ起動時に初期化ブロック（IAPで呼び出し）でYMF825の初期化・音色設定を完了させる。アプリ本体からはレジスタ書き込みのみ行う（再初期化不要）。
 
-**音量制御：** YMF825マスターボリュームレジスタ（0x19）をUIAPduino経由でATtiny1604（ジョイスティック操作）からソフトウェア制御する。詳細は `features_system_menu_20260615.md` §4参照。
+**音量制御：** YMF825マスターボリュームレジスタ（0x19）をUIAPduino経由でATtiny1604（ジョイスティック操作）からソフトウェア制御する。詳細は `features_system_menu_20260725.md` §4参照。
 
 ---
 

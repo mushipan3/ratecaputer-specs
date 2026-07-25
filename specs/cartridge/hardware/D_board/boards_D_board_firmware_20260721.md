@@ -23,7 +23,7 @@
 
 ## 1. 概要
 
-本書はD基板搭載AVR64DD28のファームウェア仕様を定める。AVR64DD28はUIAPduino（CH32V003）のI2Cスレーブとして動作し、ジョイスティック入力・OLED描画・スリープ管理を担う。日本語入力システムおよびシステムメニューを含むシステム機能全般との協調動作の詳細は `CAR-01_japanese_input_20260717.md` および `features_system_menu_20260615.md` を参照。
+本書はD基板搭載AVR64DD28のファームウェア仕様を定める。AVR64DD28はUIAPduino（CH32V003）のI2Cスレーブとして動作し、ジョイスティック入力・OLED描画・スリープ管理を担う。日本語入力システムおよびシステムメニューを含むシステム機能全般との協調動作の詳細は `CAR-01_japanese_input_20260717.md` および `features_system_menu_20260725.md` を参照。
 
 ---
 
@@ -47,7 +47,7 @@ UIAPduino（CH32V003）をマスターとする共通I2Cバス上でスレーブ
 | コマンド種別 | 方向 | 内容 |
 |---|---|---|
 | Read（RAWモード） | AVR64DD28→UIAPduino | ジョイスティック状態1バイト（bit7=0） |
-| **Write/Read（システムコマンド）** | **AVR64DD28→UIAPduino** | **SYS_CMDバイト（bit7=1）：メニュー開閉・音量変更等。詳細はfeatures_system_menu_20260615.md参照** |
+| **Write/Read（システムコマンド）** | **AVR64DD28→UIAPduino** | **SYS_CMDバイト（bit7=1）：メニュー開閉・音量変更等。詳細はfeatures_system_menu_20260725.md参照** |
 | Write（モード通知） | UIAPduino→AVR64DD28 | 日本語入力モード開始・終了・スリープ指示 |
 | Write（バッテリー残量） | UIAPduino→AVR64DD28 | UIAPduinoがATtiny202から取得した残量値を転送 |
 

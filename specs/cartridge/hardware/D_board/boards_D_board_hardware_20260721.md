@@ -39,7 +39,7 @@
 | boards_A_board_hardware_20260612.md | VCC_3V3_OUT供給元・電源シーケンス |
 | boards_D_board_firmware_20260721.md | AVR64DD28ファームウェア仕様・動作モード |
 | CAR-01_japanese_input_20260717.md | 日本語入力サブシステム仕様 |
-| features_system_menu_20260615.md | システムメニュー・音量調整・ジョイスティック操作定義 |
+| features_system_menu_20260725.md | システムメニュー・音量調整・ジョイスティック操作定義 |
 
 ---
 
@@ -47,7 +47,7 @@
 
 D基板はラテカピュータ（CAR-01規格）の日本語入力フロントエンドおよびシステムUI操作を担う専用基板である。AVR64DD28・CH1115 OLED・SKRHAAEジョイスティックの全機能をこの1枚に集約する。
 
-ジョイスティック入力の監視・OLED描画（4階調ディザリング）・日本語入力UIをAVR64DD28が完結させ、UIAPduino（CH32V003）のCPU負荷を最小化する。日本語入力システムの詳細は `CAR-01_japanese_input_20260717.md` を、システムメニュー操作の詳細は `features_system_menu_20260615.md` を参照。
+ジョイスティック入力の監視・OLED描画（4階調ディザリング）・日本語入力UIをAVR64DD28が完結させ、UIAPduino（CH32V003）のCPU負荷を最小化する。日本語入力システムの詳細は `CAR-01_japanese_input_20260717.md` を、システムメニュー操作の詳細は `features_system_menu_20260725.md` を参照。
 
 ---
 
