@@ -493,7 +493,7 @@ SPI Flashのテストデータを生成するツール。
 
 ### 15.1 char_convert.py（最優先）
 
-UTF-8またはShift-JIS文字列を恵梨沙フォントインデックス列（uint16_t[]）に双方向変換するツール。
+UTF-8またはShift-JIS(2004)文字列を **区点番号（JIS X 0213 1面）列**（uint16_t[]・線形 (ku-1)×94+(ten-1)）に双方向変換するツール。（(B)決定2026-07-26。旧称「恵梨沙フォントインデックス」＝同値。JIS X 0213 は Unicode/Shift_JIS-2004 と標準対応でPC互換。）
 
 ```
 python char_convert.py encode "こんにちは"
