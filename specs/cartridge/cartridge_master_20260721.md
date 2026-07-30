@@ -1,5 +1,16 @@
 # ラテカピュータ カートリッジ規格 目論見書
 
+**Rev. 2.0 — 2026年7月30日**
+
+> **Rev. 2.0 改訂内容（2026-07-30）**: **FRAM #2（MB85RS4MT 512KB・退避専用）を追加し、CS を PC3 に割り当てた**（§2.5）。
+> **背景**: 擬似マルチタスクの画面保存（FBPS）は、サスペンド中アプリの保存矩形を退避しておく領域を必要とする。
+> FRAM #1 は作業域(共有スクラッチ160KB)/セーブ/CTX/タスクスロットで既に全域が埋まっており、実質的な空きは
+> 22.8KB しかなく **240×60 の矩形1本(28.8KB)すら入らない**（実測）。退避先を FRAM #1 に求めると
+> 「共有スクラッチの切り詰め」「タスクスロット拡張による同時アプリ数 7→3 への削減」「Class 1 保存本数を
+> 1〜2本へ制限」のいずれかで**擬似MTの中核価値（多重度と状態保全）を削る**ことになるため、FRAM #2 追加を採る。
+> **PC3 は主基板 GPIO 20本のうち唯一の完全な空きピン**（旧 PWM_AUDIO の解放枠・兼用なし）で、CS として最適。
+> 詳細＝`pseudo_mt_display_preservation_20260724.md`。
+
 **Rev. 1.9 — 2026年7月21日**
 
 ---
@@ -785,7 +796,7 @@ SPVDD=5V（MT3608昇圧から）/ IOVDD=VDD=3.3V（デュアル電源構成）�
 | PC0 | CS_DISP | OUT | メインディスプレイ CS（独立デバイス・e-ink・TFT共通） |
 | PC1 | I2C_SDA | INOUT | 共通I2Cバス SDA（マスター） |
 | PC2 | I2C_SCL | OUT | 共通I2Cバス SCL（マスター） |
-| PC3 | （未割り当て・解放） | — | 旧: PWM_AUDIO（ADPCM PWM → RC-LPF → B基板AUDIO_INパッド）。新B基板ではADPCM再生をCH32V303が担当しAUDIO_INパッド廃止のため解放。用途未定 |
+| PC3 | **CS_FRAM2** | OUT | **FRAM #2 CS（MB85RS4MT 512KB・退避専用）**。旧: PWM_AUDIO（ADPCM PWM → RC-LPF → B基板AUDIO_INパッド）で、新B基板では ADPCM 再生を CH32V303 が担当し AUDIO_IN パッド廃止のため解放されていた枠を充当（2026-07-30）。★主基板 GPIO 20本のうち**唯一の完全な空きピン**（他の CS は UPDI/RST 等と兼用があり、PA1 は CART_READY 暫定出力と衝突している）ため CS に最適。 |
 | PC4 | DC_DISP | OUT | メインディスプレイ DC（独立デバイス・e-ink・TFT共通） |
 | PC5 | SPI_SCK | OUT | SPIバス共通 |
 | PC6 | SPI_MOSI | OUT | SPIバス共通 |
@@ -798,7 +809,7 @@ SPVDD=5V（MT3608昇圧から）/ IOVDD=VDD=3.3V（デュアル電源構成）�
 | PD5 | RST_DISP / UART_TX（CH32V303） | OUT | メインディスプレイ RST（独立デバイス・e-ink・TFT共通）/ UART TX兼用（試験Phase 1）/ **製品版=CH32V303 UART_TX（常時）**。RST_DISPは起動時一回限りのパルスのためUART通信中と競合しない |
 | PD6 | UART_RX（CH32V303）/ LOCAL_UPDI_A | IN | **製品版=CH32V303 UART_RX（常時）**。新B基板ではYMF825がCH32V303配下に移管されIRQ_NはUIAPduinoに届かないため解放 / ATtiny202アップデート時: UPDI線（兼用） |
 | PD7 | NRST / RST_YMF | IN | MCUリセット兼YMF825リセット（B基板と共通接続） |
-| PA1 | CS_FRAM1 | OUT | FRAM #1 CS（MB85RS4MT）|
+| PA1 | CS_FRAM1 | OUT | FRAM #1 CS（MB85RS4MT 512KB・作業域/セーブ/CTX/スロット）|
 | PA2 | CS_FLASH | OUT | SPI Flash（W25Q128JV）CS |
 
 **機種別差異：**
@@ -1607,6 +1618,7 @@ UIAPduinoをキャリアボードの上に重ねる2段構造。UIAPduinoの足�
 | 2026-06-09 | §2.5 CART_READYをA基板ATtiny202へ委譲・UIAPduinoからの直接出力を廃止 |
 | 2026-06-09 | §2.5 PD1をSWIO（WCH-Link）からGPIO2（外部通信モード起動トリガー）に転用 |
 | 2026-06-09 | §2.5 CS_FRAM2（PD6）を廃止・製品は1チップFRAM構成・PD6をIRQ_N（YMF825割り込み・オプション）に変更 |
+| **2026-07-30** | **§2.5 CS_FRAM2 を PC3 に新設し FRAM #2（512KB・退避専用）を追加＝2026-06-09「CS_FRAM2 廃止・1チップFRAM構成」の判断を覆す。** 理由＝擬似MTの画面保存(FBPS)がサスペンド中アプリの保存矩形の退避先を必要とするが、FRAM #1 は作業域/セーブ/CTX/スロットで全域が埋まり実質空き 22.8KB（240×60 矩形1本 28.8KB すら入らない・実測）。FRAM #1 内で賄うと多重度 7→3 か保存本数 1〜2本かへの後退が必要になる。**ピンは旧 PWM_AUDIO 解放枠の PC3＝主基板 GPIO 20本で唯一の完全な空き**（他CSは UPDI/RST 兼用あり）。※廃止当時は擬似MTのFBPS要件が未確定だった |
 | 2026-06-09 | §2.5 PWM_AUDIOをPD5（TX）からPC3（PWM対応ピン）へ移動・PD5をRST_DISPに変更 |
 | 2026-06-09 | §2.5 CS_EINK/DC_EINK/RST_EINKをCS_DISP/DC_DISP/RST_DISPに統一（TFT・e-ink共通化） |
 | 2026-06-09 | §2.5 PC4をRST_EINKからDC_DISPに変更（DC_EINKはPC3→PWM_AUDIO移動に伴い再配置） |
