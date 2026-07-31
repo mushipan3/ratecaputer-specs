@@ -230,6 +230,41 @@ RC:IT-IAP-04 type_start0=32 expect=32 PASS   ← メタ復元は正常
 
 ---
 
+---
+
+## 擬似MT 切替・画面保存 試験結果（2026-07-31 実施・設計書 §1.11）
+
+実行: `bash tools/run_test_orch.sh`（リポジトリルートから）。common_prog commit `4651b82`。
+
+| 試験ID | 内容 | 結果 | 備考 |
+|---|---|---|---|
+| UT-ORCH-02 | 切替＝スロット確保＋完了ハンドシェイク | **PASS** | `runset=[ids 01 07, free 5]`。★REG_RUNSET を**8B（実行中app_id 7件＋空き数）**へ変更した新契約での初実施 |
+| UT-THAW-01 | warm resume（解凍→yield点着地） | **PASS** | `runset=[ids 07, free 6]` |
+| UT-APPRELOAD-01 | [3] App Area 再ロードの実経路 | **PASS** | CTX の start_cell=8/size_cells=1 どおりに書込 |
+| UT-TERM-01 | 終了＝スロット解放＋元アプリへ復帰 | **PASS** | app 0x09 を終了し空きが 6 へ |
+| **UT-FBPS-01** | Class1 の矩形を FRAM#2 へ退避 | **PASS** | `rec1へ矩形退避＋管理エントリ更新(92B)`。**A-2 の初実施** |
+| **UT-FBPS-02** | 復帰＝FRAM#2→作業域→**TFT** への blit | **未達** | TFT フレーム全域ゼロ。復帰経路（両SMODロード）は走っている。P4-1 の残件 |
+
+回帰: `run_test_it` / `run_test_iap` / `run_test_ut` / `run_test_l2` / `run_test_alert` /
+`run_test_iap_var` すべて exit=0・FAIL なし。
+
+### ★この実施で判明した「試験の見かけ」に関する重要事項
+
+1. **UT-ORCH-02 等が緑だったことは、その経路が健全だった証明ではなかった。**
+   旧フィクスチャは App Area を空にしてブート/メニュー中に切替を起こしており、
+   **窓/Zone C で実行中のコードが自分自身を上書きする**状況（c-3c が欠陥と呼ぶもの）
+   そのものを踏んでいた。判定材料の REG_RUNSET 書込が**自己上書きより前に**完了するため
+   判定は成立してしまい、壊れた番地へ戻る事象は観測範囲外だった。
+   → フィクスチャを「**ユーザアプリ実行中**」（App Area に `test_app_orch`）へ移した。
+2. **エミュレータの FRAM はファイルを根拠にできない。** ハーネスは `timeout` で SIGTERM
+   終了させるため `FramStub` のデストラクタが走らず `fram*.bin` へ反映されない。
+   `FRAM_TRACE=1` の生ログ照合で観測する。**`tft_frame.bin` は別**（タイマースレッドが
+   定期書き出しするのでファイルで判定できる）。
+3. **観測用ログを足すときは他スイートのログ解析を壊さないか確認する。** FRAM ログを常時
+   有効にしたところ IT-IAP-02/05 の「在席リージョン」解析を乱して**別の試験を落とした**。
+   環境変数で opt-in にして解消。
+
+
 ## 未実施試験
 
 | 試験ID | 試験名 | 理由 |
@@ -288,6 +323,15 @@ RC:IT-IAP-04 type_start0=32 expect=32 PASS   ← メタ復元は正常
 | entries overlay=Phase 2b 4a（2026-07-15） | 5292＋BOOTPOOL 1714 | ±0（BOOTPOOL −16） | `entries[8]`⇔`s_chunk_buf`共用体化（可変設計書§7.7）。Flashコスト実質ゼロでSRAM −224B（下表参照）。BOOTPOOL微減はBTN_OKローカル退避のコード整理分。§2.1.1スタック収支再検証同時実施（機構スタック最悪276B・Zone B食み出し20B・余裕224B）。UT-IAP回帰+L3全30項目PASS |
 | 境界跨ぎキャリー=Phase 2b 4b（2026-07-15） | 5292＋BOOTPOOL 1778 | ±0（BOOTPOOL +64） | load_and_patchのチャンク境界跨ぎパッチをfail-closedハルト→キャリー方式へ（apply_patch_word共通化・可変設計書§7.4/詳細設計§7.7）。missクラスタ1258Bが枠1216Bを超過し**プール境界0x0500→0x0540へ1ページ移動**（miss枠1280B/bootui枠704B・BOOTPOOL余裕206B）。UT-IAP回帰+L3全30項目PASS（キャリー経路自体のUTはTask 5で新設） |
 | App Areaアドレス是正+C_LUI対応（eb13087・2026-07-15） | **5280＋BOOTPOOL 1956** | −12（BOOTPOOL +178） | **①App Area開始アドレス是正0x1E00→0x2000**（ユーザー指摘・正マップ=共通プログラム0x0800〜0x1DFF/スイッチしない共通領域0x1E00〜0x1FFF/App Area 0x2000〜0x3FFF。FLASH−12Bは0x2000がaddi不要のluiになるため）**②トランポリンsp/gp是正**（test_app_iap.cの`la`=PC相対→絶対lui+addi。delta移動でSRAM固定アドレスを誤計算・Spikeの4KBページパディングが小deltaで隠蔽していた実バグ）**③C_LUI対応**（圧縮luiを4B word前提でパッチし隣接命令を破壊していた機構コアの実バグ是正・patch_table_gen.py新種別4+iap.cハーフワード経路）。missクラスタ1435Bへ成長し**プール境界0x0540→0x0600へ移動**（BOOTPOOL 1956/1984B余裕28B・**以後のmiss成長は新規プールモジュール化必須**）。UT-IAP+L3全回帰PASS |
+| ca7d34a | 5592 | ±0 | seesaw 休眠コード除去（compile-out 済ゆえ供給ゼロ）＋実機プローブ P-D 新設 |
+| 3bf36e9 | 5428 | **−164** | **W-1 候補1**: `FUNCONF_TINYVECTOR`（ベクタ表 156B→4B）＋`.text_poolnear_lo` で 0x0808–0x089F の穴 152B を回収。★`.api_table`(0x08A0) は固定ABIゆえ不動。★「InterruptVector 312B」は**二重計上**で実体156B・かつ ENTRY/mtvec が指すので**死重ではない** |
+| 088049b | 5440 | +12 | **c.j 到達距離検査**を `pool_module_gen.py` に新設（既定閾値128B）。初回実行で**最小余裕 16B**（`__disable_irq`）＝崖の上に居たことが判明し、10関数を `.text_poolnear` へ固定して **244B（幾何的下限）**へ |
+| 0383889 | 5500 | +60 | **c-3c**: SYSREQ demux を1層へ移設。窓 −62B。旧実装は「種別を知るためだけに ORCH を窓へ載せ」ており、窓/Zone C で実行中のコードが自分自身を上書きしていた |
+| 049c3df | 5500 | ±0 | c-3c 完了（A案確定）。orch 試験を新契約へ移設＝App Area に `test_app_orch` を置き実運用と同じ経路で切替 |
+| eb2fd8f | 5500 | ±0 | **REG_RUNSET を 8B へ**（byte0-6=実行中app_id/byte7=空き数）。旧実装はスロットの7ビットを送っており D基板が一覧にマークできなかった。`orch_runset_send`/`slot_summary` は窓とSMOD側ゆえ1層は不変 |
+| 6bddc08 | 5552 | +52 | **A-5 (e) A点分割**: Flash書込 614〜794ms のあいだ I2C が止まる問題を 256Bスライスへ分割して解消。★設計時の −4B にはならず——c-3b で `keyscan_get` が pump するようになったため再入対策 `g_flash_busy` が要った |
+| 72a231c | 5552 | ±0 | **A-2 FBPS 完了**（`.smod_11_fbps` 698B / `.smod_12_fbpsres` 528B）。1層は SMOD 側ゆえ不変 |
+| 4651b82 | 5552 | ±0 | **P4-1 blit 実装**（`.smod_12_fbpsres` 762B へ）。★UT-FBPS-02 は未達 |
 
 **備考:**
 - `41e49ae` の +412B が最大の増加要因（BOOT_LOG無効化で解消）

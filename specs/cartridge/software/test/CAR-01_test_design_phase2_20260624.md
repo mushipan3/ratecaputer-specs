@@ -1047,6 +1047,98 @@ IT-FONT-02再定義で扱う」とした宿題のうち、スロット選択ロ�
 
 ---
 
+---
+
+### 1.11 擬似MT 切替・画面保存 試験 (UT-ORCH / UT-THAW / UT-APPRELOAD / UT-TERM / UT-FBPS)
+
+対象ファイル: `orch.c` / `slot_table.c` / `slot_snap.c` / `fbps_sus.c` / `fbps_res.c`
+試験環境: L2（Spike・`tools/run_test_orch.sh`）
+
+> **★本節は 2026-07-31 新設。** 擬似MT の切替機構は c-1〜c-3・A-2 で実装が進んだが、
+> **試験がハーネス(`run_test_orch.sh`)にしか存在せず設計書に定義が無かった**。
+> 悉皆点検C（設計書の定義⇔実装の乖離）と同じ穴なので、実装済みの6件をまとめて定義する。
+>
+> **共通の前提**: D基板の `REG_INPUT` は**ラッチ方式で read 毎に消費される**ため、各試験は
+> 実行直前に `input_state.bin=0x80`（SYS_CMD）を注入し直すこと。前段の試験が消費している。
+> **共通の注意**: 切替受理は「**ユーザアプリへ制御が渡った後だけ**」（primer §8.5.1）なので、
+> フィクスチャは App Area に `test_app_orch`（`keyscan_get` を回すだけの最小アプリ）を置いて
+> `app_loader_jump_to_app()` を通す。App Area 空でブート/メニュー中に切替を起こす旧構成は
+> **c-3c が欠陥と呼ぶ状況そのもの**なので使ってはならない。
+
+#### UT-ORCH-02 切替＝スロット確保と完了ハンドシェイク
+
+| 項目 | 内容 |
+|---|---|
+| 試験ID | UT-ORCH-02 |
+| 試験名 | SYS_CMD→REG_SWITCH→slot_alloc(first-fit)→g_slot_base 差替→REG_RUNSET エコー |
+| 対応仕様 | dboard目論見書 決定3/決定4・§3.5.1（R9） |
+| 前提条件 | スロット表 slot0 に占有ダミー(app_id=0x01)・切替先 app_id=0x07 |
+| 試験手順 | 1. FRAM スロット表を初期化<br>2. SYS_CMD＋REG_SWITCH(0x07) を注入<br>3. Spike 実行 |
+| 期待値 | `dboard_runset.bin` == `0107ffffffffff05`（byte0-6=実行中app_id・byte7=空き数） |
+| 合格基準 | first-fit が slot0 を避けて slot1 を採用し、8B の完了ハンドシェイクが届くこと |
+| 判定方法 | 自動（`dboard_runset.bin` のバイト比較） |
+
+#### UT-THAW-01 warm resume（解凍→yield 点着地）
+
+| 項目 | 内容 |
+|---|---|
+| 試験ID | UT-THAW-01 |
+| 対応仕様 | 擬似MT c-2b-3（[4] 解凍・setjmp 同型の復帰） |
+| 前提条件 | slot0=app_id 0x07・凍結域クリア・CTX 現行実行状態=未起動（[3] を no-op にする） |
+| 期待値 | `dboard_runset.bin` == `07ffffffffffff06` |
+| 合格基準 | **解凍を伴う切替の完了点は着地点だけ**なので、RUNSET が出たこと自体が着地の証拠 |
+| 判定方法 | 自動 |
+
+#### UT-APPRELOAD-01 [3] App Area 再ロードの実経路
+
+| 項目 | 内容 |
+|---|---|
+| 試験ID | UT-APPRELOAD-01 |
+| 対応仕様 | 擬似MT c-2b（[3] App Area 再ロード・`.smod_9_appreload`） |
+| 前提条件 | リソースディレクトリ・CODE・PATCH・配置状態表のフィクスチャ一式 |
+| 期待値 | CTX の start_cell/size_cells どおりに App Area へ書き込まれること |
+| 判定方法 | 自動（spike 生ログの Flash 書込番地の照合） |
+
+#### UT-TERM-01 終了＝スロット解放と元アプリへの復帰
+
+| 項目 | 内容 |
+|---|---|
+| 試験ID | UT-TERM-01 |
+| 対応仕様 | dboard目論見書 §3.5.1（R9・スロット満杯時のハンドリング） |
+| 前提条件 | slot0=0x07(自分)/slot1=0x09(終了対象)・`REG_SYSREQ`=TERMINATE |
+| 期待値 | `dboard_runset.bin` == `07ffffffffffff06`（0x09 が消え空きが1増える） |
+| 判定方法 | 自動 |
+
+#### UT-FBPS-01 画面保存＝Class1 の矩形を FRAM#2 へ退避
+
+| 項目 | 内容 |
+|---|---|
+| 試験ID | UT-FBPS-01 |
+| 試験名 | Class1 宣言 → 切替 → 保存矩形が FRAM#2 レコードへバイト一致で退避 |
+| 対応仕様 | `pseudo_mt_display_preservation` §4（領域限定退避・2クラス）・§4.6（FRAM#2マップ） |
+| 前提条件 | アプリメタ +0x1580 に `AppManifest`（version=1/flags=Class1/8×4）・作業域に既知パターン |
+| 試験手順 | 1. Manifest と既知パターンを fram.bin へ<br>2. FRAM#2 の管理エントリを全て空き(slot_idx=0xFF)に<br>3. SYS_CMD＋SWITCH を注入して Spike 実行 |
+| 期待値 | FRAM#2 のいずれかのレコード先頭に既知パターンの先頭バイト＋管理エントリの更新 |
+| 合格基準 | 上記2点が **spike 生ログ**で観測できること |
+| 判定方法 | 自動（生ログ照合） |
+| ★観測手段の注意 | **`fram*.bin` を根拠にできない。** ハーネスは `timeout` で SIGTERM 終了させるため `FramStub` のデストラクタが走らずファイルへ反映されない（UT-APPRELOAD-01 でも踏んだ）。∴ `FRAM_TRACE=1` を付けて `FramStub` の read/write ログ（連続でない先頭だけ＝SPIバースト1回1行）を照合する |
+| ★検証しないこと | **画面が実際に戻ること。** それは UT-FBPS-02（P4-1）の担当 |
+
+#### UT-FBPS-02 復帰＝FRAM#2 → 作業域 → TFT への blit【★2026-07-31 時点 未達】
+
+| 項目 | 内容 |
+|---|---|
+| 試験ID | UT-FBPS-02 |
+| 試験名 | 解凍時に保存矩形が TFT GRAM まで戻ること（P4-1 の end-to-end） |
+| 対応仕様 | `pseudo_mt_display_preservation` §4.5（保存矩形＝機構がピクセル復元） |
+| 前提条件 | 作業域に既知パターン・Class1 宣言・slot0=app0x07・凍結域クリア・TFT クリア |
+| 試験手順 | 1. 上記を仕込む<br>2. SYS_CMD＋SWITCH を注入<br>3. 同じ切替の中で 退避→復帰→blit が走る |
+| 期待値 | `tft_frame.bin` の該当矩形が既知パターンと一致 |
+| 判定方法 | 自動（`tft_frame.bin` の矩形切り出し比較） |
+| ★観測手段 | **`tft_frame.bin` は使える**（st7789 スタブが**タイマースレッドで定期書き出し**するので timeout 終了でも残る）。`fram*.bin` と扱いが違う点に注意 |
+| **★状態** | **未達（2026-07-31）**。両 SMOD のロードは確認でき復帰経路は走っているが、**TFT フレームが全域ゼロ**。疑うべきは (a) 矩形の w/h が 0 で早期 return (b) ウィンドウ設定/ピクセル書きが st7789 スタブに届いていない。**当てずっぽうに直さず、まず `blit_rect_to_tft` 入口の x/y/w/h を観測すること** |
+
+
 ## 2. L2 結合試験
 
 ### 2.0 IAP基本機能試験（最優先）(UT-IAP)
