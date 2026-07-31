@@ -243,7 +243,7 @@ RC:IT-IAP-04 type_start0=32 expect=32 PASS   ← メタ復元は正常
 | UT-APPRELOAD-01 | [3] App Area 再ロードの実経路 | **PASS** | CTX の start_cell=8/size_cells=1 どおりに書込 |
 | UT-TERM-01 | 終了＝スロット解放＋元アプリへ復帰 | **PASS** | app 0x09 を終了し空きが 6 へ |
 | **UT-FBPS-01** | Class1 の矩形を FRAM#2 へ退避 | **PASS** | `rec1へ矩形退避＋管理エントリ更新(92B)`。**A-2 の初実施** |
-| **UT-FBPS-02** | 復帰＝FRAM#2→作業域→**TFT** への blit | **未達** | TFT フレーム全域ゼロ。復帰経路（両SMODロード）は走っている。P4-1 の残件 |
+| **UT-FBPS-02** | 復帰＝FRAM#2→合成バッファ→**TFT** への blit | **未達** | TFT フレーム全域ゼロ。復帰経路（両SMODロード）は走っている。P4-1 の残件 |
 
 回帰: `run_test_it` / `run_test_iap` / `run_test_ut` / `run_test_l2` / `run_test_alert` /
 `run_test_iap_var` すべて exit=0・FAIL なし。

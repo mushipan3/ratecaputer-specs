@@ -1116,7 +1116,7 @@ IT-FONT-02再定義で扱う」とした宿題のうち、スロット選択ロ�
 | 試験ID | UT-FBPS-01 |
 | 試験名 | Class1 宣言 → 切替 → 保存矩形が FRAM#2 レコードへバイト一致で退避 |
 | 対応仕様 | `pseudo_mt_display_preservation` §4（領域限定退避・2クラス）・§4.6（FRAM#2マップ） |
-| 前提条件 | アプリメタ +0x1580 に `AppManifest`（version=1/flags=Class1/8×4）・作業域に既知パターン |
+| 前提条件 | アプリメタ +0x1580 に `AppManifest`（version=1/flags=Class1/8×4）・合成バッファに既知パターン |
 | 試験手順 | 1. Manifest と既知パターンを fram.bin へ<br>2. FRAM#2 の管理エントリを全て空き(slot_idx=0xFF)に<br>3. SYS_CMD＋SWITCH を注入して Spike 実行 |
 | 期待値 | FRAM#2 のいずれかのレコード先頭に既知パターンの先頭バイト＋管理エントリの更新 |
 | 合格基準 | 上記2点が **spike 生ログ**で観測できること |
@@ -1124,14 +1124,14 @@ IT-FONT-02再定義で扱う」とした宿題のうち、スロット選択ロ�
 | ★観測手段の注意 | **`fram*.bin` を根拠にできない。** ハーネスは `timeout` で SIGTERM 終了させるため `FramStub` のデストラクタが走らずファイルへ反映されない（UT-APPRELOAD-01 でも踏んだ）。∴ `FRAM_TRACE=1` を付けて `FramStub` の read/write ログ（連続でない先頭だけ＝SPIバースト1回1行）を照合する |
 | ★検証しないこと | **画面が実際に戻ること。** それは UT-FBPS-02（P4-1）の担当 |
 
-#### UT-FBPS-02 復帰＝FRAM#2 → 作業域 → TFT への blit【★2026-07-31 時点 未達】
+#### UT-FBPS-02 復帰＝FRAM#2 → 合成バッファ → TFT への blit【★2026-07-31 時点 未達】
 
 | 項目 | 内容 |
 |---|---|
 | 試験ID | UT-FBPS-02 |
 | 試験名 | 解凍時に保存矩形が TFT GRAM まで戻ること（P4-1 の end-to-end） |
 | 対応仕様 | `pseudo_mt_display_preservation` §4.5（保存矩形＝機構がピクセル復元） |
-| 前提条件 | 作業域に既知パターン・Class1 宣言・slot0=app0x07・凍結域クリア・TFT クリア |
+| 前提条件 | 合成バッファに既知パターン・Class1 宣言・slot0=app0x07・凍結域クリア・TFT クリア |
 | 試験手順 | 1. 上記を仕込む<br>2. SYS_CMD＋SWITCH を注入<br>3. 同じ切替の中で 退避→復帰→blit が走る |
 | 期待値 | `tft_frame.bin` の該当矩形が既知パターンと一致 |
 | 判定方法 | 自動（`tft_frame.bin` の矩形切り出し比較） |
