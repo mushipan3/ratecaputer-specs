@@ -957,6 +957,12 @@
 
 #### UT-FONT-02 フォント領域オフセット計算 (L2)
 
+> ★**2026-07-31 注記**: 下の「96KB×4スロット」は**廃止された旧構成**。確定済みの正は
+> 2ビット4階調2サイズ（0x024000 小144KB・16B/字 ／ 0x048000 大320KB・36B/字・
+> 文字集合＝JIS X 0213:2004 第1面 ≈8,797字）＝`memory_map_canonical` §SPI Flash。
+> 本試験は **(B2) 実装前の暫定実装**を検証しており、(B2) 実装時に基準値を更新する。
+> 以下の改訂記録は当時の事実として保全する。
+
 **2026-07-18改訂**: フォントのSPI Flash直読み化（96KB×4スロット・cartridge_master Rev.1.8）に伴い、
 基準を旧FRAMアドレス（ELYSIA_FONT_BASE 0x13880＝旧々マップ）から FONT_FLASH_BASE（0x008000）へ是正。
 実装（test_app_l2.c）は是正済みだったが本定義が旧記述のまま乖離していた（悉皆点検C該当・本改訂で解消）。
@@ -982,7 +988,7 @@
 |---|---|
 | 試験ID | UT-FONT-04 |
 | 試験名 | 字体スロット選択（font_slot_init/font_slot_base）の実経路検証 |
-| 対応仕様 | cartridge_master Rev.1.8 §フォント（96KB×4スロット・統一インデックス空間）・FRAM_FONT_SLOT_SEL(0x0A8F0) |
+| 対応仕様 | `memory_map_canonical` §SPI Flash（**字体データは 0x024000 小144KB／0x048000 大320KB・2ビット4階調2サイズ・2026-07-19確定**）・統一インデックス空間・FRAM_FONT_SLOT_SEL(0x0A8F0)。★本試験が現在検証しているのは **(B2) 実装前の暫定実装**（FONT_FLASH_BASE 0x008000・8B/字）＝(B2) 実装時に基準値を確定マップへ更新すること。旧「96KB×4スロット」は廃止（2026-07-31 是正） |
 | 前提条件 | font_slot.c（common_prog実物）を test_app_l2 に直接リンク（ADDITIONAL_C_FILES）。FRAM実書き込み経路を使用 |
 | 試験手順 | 1. FRAM_FONT_SLOT_SEL へ選択値を実書き込み<br>2. font_slot_init() を呼ぶ<br>3. font_slot_base() の返却値を期待値と比較（6ケース繰り返し） |
 | 試験データ | sel = 0x00 / 0x01 / 0x02 / 0x03（正常系）・0x04 / 0xFF（範囲外） |

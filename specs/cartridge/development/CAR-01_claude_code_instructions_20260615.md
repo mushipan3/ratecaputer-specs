@@ -160,7 +160,9 @@ CH32V003F4P6
 
 // SPI Flash
 #define FLASH_CATALOG_BASE 0x000000    // カタログテーブル（32KB）
-#define FLASH_FONT_BASE    0x008000    // 恵梨沙フォント（64KB・固定）
+#define FONT_SMALL_BASE    0x024000    // 小(8ドット)字体データ 144KB・16B/字
+#define FONT_LARGE_BASE    0x048000    // 大(12ドット)字体データ 320KB・36B/字
+// ★旧 FLASH_FONT_BASE 0x008000（64KB／96KB×4）は廃止（2026-07-19確定・2026-07-31是正）
 #define FLASH_SYS_BASE     0x018000    // システム予約（512KB）
 #define FLASH_APP_BASE     0x098000    // アプリ領域
 
