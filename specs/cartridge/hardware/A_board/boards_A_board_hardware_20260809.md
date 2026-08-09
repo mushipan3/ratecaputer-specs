@@ -65,7 +65,7 @@
 ```
 VBAT_IN → IRLML6402（U2）
     ├── Buck DCDC（U3・3.3V） → VCC_3V3_OUT
-    │       ├── D基板（ATtiny1604・CH1115 OLED）← UIAPduinoから独立給電
+    │       ├── D基板（AVR64DD28・CH1115 OLED）← UIAPduinoから独立給電
     │       └── B基板 YMF825 VDD/IOVDD/VREF・MCP6001 VDD
     │
     └── MT3608（U4・5.3V設定）
@@ -107,7 +107,7 @@ Buck 3.3V出力──[Q_PWR: IRLML6402]── PWR_IO（下列3）
 
 ATtiny404を**I2Cスレーブ**、UIAPduino（CH32V003）を**I2Cマスター**として定義する。ATtiny404はUIAPduinoからのReadリクエストに対してバッテリー残量値・充電状態を返答する。OLEDへの描画・UIAPduinoへの自律送信は一切行わない。
 
-OLEDはA基板から撤去し、D基板（ATtiny1604搭載）に移管した。
+OLEDはA基板から撤去し、D基板（AVR64DD28搭載）に移管した。
 
 ### ATtiny404 ピンアサイン（厳格定義）
 
