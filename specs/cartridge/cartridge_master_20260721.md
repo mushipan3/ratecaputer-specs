@@ -815,7 +815,7 @@ SPVDD=5V（MT3608昇圧から）/ IOVDD=VDD=3.3V（デュアル電源構成）�
 | PC5 | SPI_SCK | OUT | SPIバス共通 |
 | PC6 | SPI_MOSI | OUT | SPIバス共通 |
 | PC7 | SPI_MISO | IN | SPIバス共通 |
-| PD0 | BUSY_EINK / GPIO4_CS / LOCAL_UPDI_D | IN/OUT | e-ink版: メインディスプレイ BUSY（独立デバイス） / TFT版: SPI拡張デバイスCS（上列4） / ATtiny1604アップデート時: UPDI線（兼用・アップデート中はFM音源停止） |
+| PD0 | BUSY_EINK / GPIO4_CS / LOCAL_UPDI_D | IN/OUT | e-ink版: メインディスプレイ BUSY（独立デバイス） / TFT版: SPI拡張デバイスCS（上列4） / AVR64DD28アップデート時: UPDI線（兼用・アップデート中はFM音源停止） |
 | PD1 | GPIO2 | IN | 拡張コネクタ上列2・外部通信モード起動トリガー |
 | PD2 | CS_YMF825 | OUT | YMF825 CS（B基板） |
 | PD3 | （USB D+） | — | USB専用・使用不可 |
@@ -830,7 +830,7 @@ SPVDD=5V（MT3608昇圧から）/ IOVDD=VDD=3.3V（デュアル電源構成）�
 
 | ピン | e-ink版 | TFT版 |
 |------|--------|-------|
-| PD0 | BUSY_EINK（入力）/ ATtiny1604アップデート時LOCAL_UPDI_D | GPIO4_CS・SPI拡張デバイスCS（出力）/ ATtiny1604アップデート時LOCAL_UPDI_D |
+| PD0 | BUSY_EINK（入力）/ AVR64DD28アップデート時LOCAL_UPDI_D | GPIO4_CS・SPI拡張デバイスCS（出力）/ AVR64DD28アップデート時LOCAL_UPDI_D |
 | 上列4〜7 | 未接続 | SPI拡張デバイス対応（ガイドラインC参照） |
 
 **CART_READYについて：**
@@ -840,7 +840,7 @@ UIAPduinoからは直接出力しない。UIAPduinoがI2C経由でATtiny202（A�
 
 | ピン | UPDI対象 | アップデート中の制約 |
 |------|---------|----------------|
-| PD0 | ATtiny1604（D基板）PA0 | FM音源（YMF825）を停止すること |
+| PD0 | AVR64DD28（D基板）PA0 | FM音源（YMF825）を停止すること |
 | PD6 | ATtiny202（A基板）PA0 | e-ink描画コマンドを送らないこと / TFT版は拡張デバイスCSをネゲートすること |
 
 **PD5・PD6の試験フェーズ別接続：**
