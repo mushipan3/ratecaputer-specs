@@ -44,13 +44,13 @@
 
 ## 1. 本書の位置づけ
 
-本書はCAR-01規格B基板（新版・YMF825-EZ×2＋CH32V303搭載）に実装するCH32V303ファームウェアの仕様を定める。ハードウェア仕様は `boards_B_board_hardware_20260703.md` を参照。
+本書はCAR-01規格B基板（新版・YMF825-EZ×2＋CH32V303搭載）に実装するCH32V303ファームウェアの仕様を定める。ハードウェア仕様は `boards_B_board_hardware_20260809.md` を参照。
 
 **参照ドキュメント：**
 
 | ドキュメント | 参照事項 |
 |---|---|
-| boards_B_board_hardware_20260703.md | B基板ハードウェア構成・ピンアサイン・BOM |
+| boards_B_board_hardware_20260809.md | B基板ハードウェア構成・ピンアサイン・BOM |
 | boards_B_board_hardware_20260615.md（Rev.2.12） | 旧B基板ファームウェア（YMF825単発・UIAPduino直接SPI制御）との差分確認 |
 | cartridge_master（最新版） | CAR-01全体規格・UIAPduinoピンアサイン表 |
 
