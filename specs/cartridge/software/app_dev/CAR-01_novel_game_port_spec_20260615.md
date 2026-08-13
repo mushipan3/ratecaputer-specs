@@ -172,8 +172,13 @@ typedef struct {
 | 0x1 | 画像（背景・CG・スプライト） |
 | 0x2 | 音声（BGM・VGMバイナリ） |
 | 0x3 | 音声（効果音・ADPCM） |
-| 0x5 | シナリオ（バイトコード列） |
-| 0xF | FM音色定義拡張 |
+| **0x5** | **FM音色定義**（★2026-08-14 に 0xF から移動） |
+| **0x6** | **シナリオ（バイトコード列）**（★2026-08-14 に 0x5 から移動） |
+| **0x7** | **スクリプトプログラム**（★2026-08-14 新設） |
+| **0xE** | **パッチテーブル** |
+| **0xF** | **ディレクトリ拡張ブロック** |
+
+> ★**2026-08-14 に種別番号を並べ替えた**。正本＝`cartridge_master` §1.8。
 
 **メタ情報領域レイアウト（TFT/OLED機種・6KB）：**
 
@@ -207,7 +212,8 @@ LTC_API->disp_fill(DISP_BLACK);
 LTC_API->disp_draw_string("こんにちは", 10, 10, DISP_WHITE, DISP_BLACK);
 
 // リソースロード
-LTC_API->load_resource(0x5001, fram_dest);  // シナリオID=1をFRAMに展開
+// ★2026-08-14: シナリオは種別 0x6 へ移動／API は (種別ID, 領域ID, オフセット) の3引数へ
+LTC_API->load_resource(0x6001, LOADRES_AREA_WORK, 0x0000);  // シナリオID=1を作業領域へ
 
 // ブロック切り替え（パターンB）
 LTC_API->iap_run(next_block_addr);  // 戻らない
