@@ -15,7 +15,7 @@
 > - `cartridge_master_20260617.md`
 > - `boards_A_board_hardware_20260809.md`（バッテリー表示の挙動のみ）
 > - `boards_B_board_hardware_20260809.md`（音声まわり）
-> - `boards_C_board_hardware_20260615.md`（ストレージまわり）
+> - `boards_C_board_hardware_20260618.md`（ストレージまわり）
 > - `boards_D_board_hardware_20260809.md`（入力・OLEDまわり）
 > - `CAR-01_emulator_dev_20260809.md`（エミュレータ仕様）
 >

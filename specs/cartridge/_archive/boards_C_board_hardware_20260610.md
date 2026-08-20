@@ -2,4 +2,4 @@
 
 ## 確定版 Rev.1.1 — 2026年6月10日
 
-> **アーカイブ版** — 最新版は `specs/cartridge/hardware/boards/C_board/boards_C_board_hardware_20260615.md` を参照
+> **アーカイブ版** — 最新版は `specs/cartridge/hardware/C_board/boards_C_board_hardware_20260618.md` を参照
