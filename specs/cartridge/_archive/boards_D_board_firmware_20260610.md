@@ -2,4 +2,4 @@
 
 **Rev. 1.0 — 2026年6月10日**
 
-> **アーカイブ版** — 最新版は `specs/cartridge/hardware/boards/D_board/boards_D_board_firmware_20260615.md` を参照
+> **アーカイブ版** — 最新版は `specs/cartridge/hardware/D_board/boards_D_board_firmware_20260809.md` を参照
